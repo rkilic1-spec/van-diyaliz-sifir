@@ -1,58 +1,44 @@
 const fs = require("fs");
 const path = require("path");
 
-const DATA = path.join(__dirname, "..", "data");
+const DATA_DIR = path.join(__dirname, "..", "data");
+const HASTA_FILE = path.join(DATA_DIR, "hastalar.json");
+const HEMSIRE_FILE = path.join(DATA_DIR, "hemsireler.json");
+const DAGITIM_FILE = path.join(DATA_DIR, "dagitimlar.json");
 
-function oku(dosya) {
-  return JSON.parse(
-    fs.readFileSync(path.join(DATA, dosya), "utf8")
-  );
+function oku(file, def) {
+  if (!fs.existsSync(file)) return def;
+  return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
-function yaz(dosya, veri) {
-  fs.writeFileSync(
-    path.join(DATA, dosya),
-    JSON.stringify(veri, null, 2)
-  );
+function yaz(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-function dagitimYap(hafta) {
-  const hastalar = oku("hastalar.json").filter(h => h.aktif);
-  const hemsireler = oku("hemsireler.json").filter(h => h.aktif);
+function haftalikDagitimYap(hafta) {
+  const hastalar = oku(HASTA_FILE, []);
+  const hemsireler = oku(HEMSIRE_FILE, []);
+  const dagitimlar = oku(DAGITIM_FILE, {});
 
-  if (hastalar.length === 0) {
-    throw new Error("Aktif hasta yok");
-  }
-  if (hemsireler.length === 0) {
-    throw new Error("Aktif hemşire yok");
+  if (hastalar.length === 0 || hemsireler.length === 0) {
+    throw new Error("Hasta veya hemşire yok");
   }
 
-  let sonuc = [];
-  let hIndex = 0;
+  dagitimlar[hafta] = [];
 
-  for (const hasta of hastalar) {
-    const hemsire = hemsireler[hIndex % hemsireler.length];
+  let i = 0;
+  for (const hasta of hastalar.filter(h => h.aktif)) {
+    const hemsire = hemsireler[i % hemsireler.length];
 
-    sonuc.push({
-      hafta,
+    dagitimlar[hafta].push({
       hasta: hasta.ad,
-      hemsire: hemsire.ad,
-      gun: hasta.gun,
-      seans: hasta.seans
+      hemsire: hemsire.ad
     });
 
-    hIndex++;
+    i++;
   }
 
-  let dagitimlar = {};
-  const dosya = path.join(DATA, "dagitimlar.json");
-
-  if (fs.existsSync(dosya)) {
-    dagitimlar = JSON.parse(fs.readFileSync(dosya, "utf8"));
-  }
-
-  dagitimlar[hafta] = sonuc;
-  yaz("dagitimlar.json", dagitimlar);
+  yaz(DAGITIM_FILE, dagitimlar);
 }
 
-module.exports = { dagitimYap };
+module.exports = { haftalikDagitimYap };
