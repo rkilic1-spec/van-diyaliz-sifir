@@ -76,3 +76,73 @@ app.get("/dagitim/:hafta", (req, res) => {
 app.listen(PORT, () => {
   console.log("✅ Server çalışıyor:", PORT);
 });
+
+const readJSON = (file, def) => {
+  if (!fs.existsSync(file)) return def;
+  return JSON.parse(fs.readFileSync(file));
+};
+
+const writeJSON = (file, data) => {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+};
+app.get("/admin/hemsire", (req, res) => {
+  if (!req.session.admin) return res.redirect("/login");
+
+  res.send(`
+    <h2>Hemşire Ekle</h2>
+    <form method="POST">
+      <input name="ad" placeholder="Ad Soyad">
+      <button>Ekle</button>
+    </form>
+    <a href="/admin">Geri</a>
+  `);
+});
+app.post("/admin/hemsire", (req, res) => {
+  const file = DATA("hemsireler.json");
+  const hemsireler = readJSON(file, []);
+
+  hemsireler.push({
+    id: Date.now(),
+    ad: req.body.ad,
+    aktif: true
+  });
+
+  writeJSON(file, hemsireler);
+  res.redirect("/admin/hemsire");
+});
+app.get("/admin/hasta", (req, res) => {
+  if (!req.session.admin) return res.redirect("/login");
+
+  res.send(`
+    <h2>Hasta Ekle</h2>
+    <form method="POST">
+      <input name="ad" placeholder="Hasta Adı">
+      <select name="gun">
+        <option>Pzt-Çar-Cum</option>
+        <option>Sal-Per-Cts</option>
+      </select>
+      <select name="seans">
+        <option>Sabah</option>
+        <option>Öğle</option>
+      </select>
+      <button>Ekle</button>
+    </form>
+    <a href="/admin">Geri</a>
+  `);
+});
+app.post("/admin/hasta", (req, res) => {
+  const file = DATA("hastalar.json");
+  const hastalar = readJSON(file, []);
+
+  hastalar.push({
+    id: Date.now(),
+    ad: req.body.ad,
+    gun: req.body.gun,
+    seans: req.body.seans,
+    aktif: true
+  });
+
+  writeJSON(file, hastalar);
+  res.redirect("/admin/hasta");
+});
+
