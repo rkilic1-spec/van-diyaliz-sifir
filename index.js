@@ -81,6 +81,25 @@ app.get("/dagitim/:hafta", (req, res) => {
   res.json(json[hafta] || []);
 });
 
+const { dagitimYap } = require("./engine/dagitimMotoru");
+
+app.post("/admin/dagitim", (req, res) => {
+  const { hafta } = req.body;
+
+  try {
+    dagitimYap(hafta);
+    res.send("✅ Dağıtım yapıldı");
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
+app.get("/admin/dagitim/:hafta", (req, res) => {
+  const data = require("./data/dagitimlar.json");
+  res.json(data[req.params.hafta] || []);
+});
+
+
 
 // DAGITIM
 app.post("/dagitim", (req, res) => {
