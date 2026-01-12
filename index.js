@@ -46,15 +46,40 @@ app.post("/login", (req, res) => {
 // ADMIN
 app.get("/admin", (req, res) => {
   if (!req.session.admin) return res.redirect("/login");
+
   res.send(`
-    <h1>Admin</h1>
+    <h1>Admin Panel</h1>
+
+    <h3>Hemşire</h3>
+    <a href="/admin/hemsire">➕ Hemşire Ekle</a>
+
+    <h3>Hasta</h3>
+    <a href="/admin/hasta">➕ Hasta Ekle</a>
+
+    <h3>Dağıtım</h3>
     <form method="POST" action="/dagitim">
       <input name="hafta" value="2026-01-HAFTA-1">
       <button>Dağıtımı Çalıştır</button>
     </form>
-    <a href="/dagitim/2026-01-HAFTA-1">Dağıtımı Gör</a>
+
+    <br>
+    <a href="/dagitim/2026-01-HAFTA-1">📋 Dağıtımı Gör</a>
   `);
 });
+
+app.get("/dagitim/:hafta", (req, res) => {
+  const file = path.join(__dirname, "data", "dagitimlar.json");
+
+  if (!fs.existsSync(file)) {
+    return res.json([]);
+  }
+
+  const json = JSON.parse(fs.readFileSync(file));
+  const hafta = req.params.hafta;
+
+  res.json(json[hafta] || []);
+});
+
 
 // DAGITIM
 app.post("/dagitim", (req, res) => {
