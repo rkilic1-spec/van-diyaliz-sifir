@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 10000;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
+app.use("/data", express.static(path.join(__dirname, "data")));
 app.use(
   session({
     secret: "diyaliz-secret",
@@ -18,6 +18,7 @@ app.use(
 );
 
 const DATA = (f) => path.join(__dirname, "data", f);
+
 
 // ROOT
 app.get("/", (req, res) => {
